@@ -1,0 +1,3 @@
+ticket_id,description,priority,status,service,created_by,created_at
+INC001,Database connection timeout,P1,OPEN,Database,siva,2026-10-05T10:00:00
+INC002,Network connection is slow,P2,IN_PROGRESS,Network,admin,2026-10-05T11:00:00

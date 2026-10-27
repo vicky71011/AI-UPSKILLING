@@ -1,0 +1,30 @@
+app/domain/ticket.py
+
+ticket.py represents the core business object of our application.
+
+This file should contain the domain representation, not API validation, database code, logging, file handling, or classification logic.
+
+
+
+app/models/ticket_models.py
+
+TicketInput = boundary model
+
+TicketInput is essentially:
+"What data am I willing to accept from outside my application?"
+
+
+Ticket = domain object
+
+"What is a Ticket inside my business domain?"
+
+
+Field() → basic constraints/metadata
+field_validator() → normalization/custom validation
+Literal → allowed values
+datetime → automatic datetime parsing/default
+
+
+Exception:
+
+An exception is an event that occurs during program execution that disrupts the normal flow of the program
