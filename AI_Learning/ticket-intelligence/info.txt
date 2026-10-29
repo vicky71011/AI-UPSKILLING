@@ -28,3 +28,17 @@ datetime → automatic datetime parsing/default
 Exception:
 
 An exception is an event that occurs during program execution that disrupts the normal flow of the program
+
+Review the complete project — check imports, duplicate dependencies, error handling, and configuration.
+
+
+
+Verify fresh installation — confirm that another developer can install the dependencies and run the tests from a clean virtual environment.
+
+
+
+Improve code quality — add type hints where missing, improve validation edge cases, and check test coverage.
+
+
+
+Move to Week 2 — evolve the same project into a FastAPI application with HTTP endpoints, request validation, and API tests.

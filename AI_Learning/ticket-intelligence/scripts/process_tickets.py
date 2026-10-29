@@ -1,9 +1,10 @@
 import argparse
-import logging
-import sys
+from pydantic import ValidationError
 
-from services.ticket_service import TicketService
-from utils.logging import get_logger
+from app.services.ticket_service import TicketService
+from app.utils.logging import get_logger
+from app.exceptions.ticket_exceptions import TicketProcessingError
+
 from config.settings import DEFAULT_INPUT_FILE
 
 class ProcessTicket:
@@ -26,19 +27,32 @@ class ProcessTicket:
         return parser.parse_args()
 
     def run(self):
-        args = self.parse_arguments()
+        try:   
+            args = self.parse_arguments()
 
-        self.logger.info("Processing tickets from: %s", args.input_file)
+            self.logger.info("Processing tickets from: %s", args.input_file)
 
-        results = self.ticket_service.process_file(args.input_file)
+            results = self.ticket_service.process_file(args.input_file)
 
-        self.logger.info("Successfully processed %d tickets", len(results))
+            self.logger.info("Successfully processed %d tickets", len(results))
 
-        for ticket in results:
-            print(f"\nTicket ID: {ticket.ticket_id}")
-            print(f"Priority: {ticket.priority}")
-            print(f"Category: {ticket.category}")
-            print(f"Critical: {ticket.is_critical}")
+            for ticket in results:
+                print(f"\nTicket ID: {ticket.ticket_id}")
+                print(f"Priority: {ticket.priority}")
+                print(f"Category: {ticket.category}")
+                print(f"Critical: {ticket.is_critical}")
+
+        except TicketProcessingError as exc:
+            self.logger.error("Ticket processing failed: %s", exc)
+            raise SystemExit(1)
+        
+        except ValidationError as exc:
+            self.logger.error("Ticket validation failed: %s", exc)
+            raise SystemExit(1)
+        
+        except Exception:
+            self.logger.exception("An unexpected error occurred")
+            raise SystemExit(1)
 
 if __name__ == "__main__":
     ProcessTicket().run()
