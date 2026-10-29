@@ -1,0 +1,36 @@
+cat > .dockerignore <<'EOF'
+# Python virtual environments
+.venv/
+venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Test and coverage artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Packaging artifacts
+*.egg-info/
+build/
+dist/
+
+# Git metadata
+.git/
+.gitignore
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+EOF
