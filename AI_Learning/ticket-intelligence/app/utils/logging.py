@@ -1,12 +1,12 @@
 import logging
+
 from config.settings import LOG_LEVEL
+
 
 def get_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
 
-    logger.setLevel(
-        getattr(logging, LOG_LEVEL.upper(), logging.INFO)
-    )
+    logger.setLevel(getattr(logging, LOG_LEVEL.upper(), logging.INFO))
     if not logger.handlers:
         handler = logging.StreamHandler()
 
@@ -16,5 +16,7 @@ def get_logger(name: str) -> logging.Logger:
 
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+
+    logger.propagate = False
 
     return logger

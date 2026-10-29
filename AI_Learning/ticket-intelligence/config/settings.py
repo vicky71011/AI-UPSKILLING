@@ -1,7 +1,7 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
-from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -22,10 +22,7 @@ LOG_LEVEL = os.getenv(
     "INFO",
 )
 
-input_file = Path(
-    os.getenv("DEFAULT_INPUT_FILE", "data/tickets.json")
-)
+input_file = Path(os.getenv("DEFAULT_INPUT_FILE", "data/tickets.json"))
 DEFAULT_INPUT_FILE = (
-    input_file if input_file.is_absolute()
-    else PROJECT_ROOT / input_file
+    input_file if input_file.is_absolute() else PROJECT_ROOT / input_file
 )

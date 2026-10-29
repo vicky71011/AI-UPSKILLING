@@ -1,28 +1,38 @@
+import pytest
+
 from app.exceptions.ticket_exceptions import (
-    TicketException,
     InvalidTicketError,
+    TicketException,
     TicketProcessingError,
 )
 
-def test_invalid_ticket():
-    try:
-        raise InvalidTicketError("Invalid ticket priority")
-    except InvalidTicketError as e:
-        print("Caught:", e)
 
-def test_processing_error():
-    try:
-        raise TicketProcessingError("Failed to process ticket")
-    except TicketProcessingError as e:
-        print("Caught:", e)
+@pytest.mark.parametrize(
+    ("exception_class", "message"),
+    [
+        (InvalidTicketError, "Invalid ticket priority"),
+        (TicketProcessingError, "Failed to process ticket"),
+    ],
+)
+def test_exception_message(exception_class, message):
+    error = exception_class(message)
 
-def test_base_exception():
-    try:
-        raise InvalidTicketError("Invalid ticket")
-    except TicketException as e:
-        print("Caught ticket exception:", e)
+    assert str(error) == message
 
-if __name__ == "__main__":
-    test_invalid_ticket()
-    test_processing_error()
-    test_base_exception()
+
+def test_invalid_ticket_error_inherits_from_ticket_exception():
+    assert issubclass(InvalidTicketError, TicketException)
+
+
+def test_ticket_processing_error_inherits_from_ticket_exception():
+    assert issubclass(TicketProcessingError, TicketException)
+
+
+def test_ticket_exception_inherits_from_exception():
+    assert issubclass(TicketException, Exception)
+
+
+def test_ticket_exception_preserves_message():
+    error = TicketException("Base ticket error")
+
+    assert str(error) == "Base ticket error"

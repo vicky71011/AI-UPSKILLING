@@ -1,4 +1,3 @@
-
 import csv
 import os
 import subprocess
@@ -12,7 +11,7 @@ SCRIPT_PATH = PROJECT_ROOT / "scripts" / "process_tickets.py"
 def run_cli(*args):
     """Run the CLI script and capture its output."""
     env = os.environ.copy()
-    env["PYTHONPATH"] = f"{PROJECT_ROOT}:{PROJECT_ROOT / 'app'}"
+    env["PYTHONPATH"] = f"{PROJECT_ROOT}{os.pathsep}{PROJECT_ROOT / 'app'}"
 
     return subprocess.run(
         [sys.executable, str(SCRIPT_PATH), *args],
@@ -21,6 +20,7 @@ def run_cli(*args):
         capture_output=True,
         text=True,
         timeout=10,
+        check=False,
     )
 
 
@@ -47,6 +47,18 @@ def test_missing_input_file():
     assert "does_not_exist.csv" in output
 
 
+def test_unsupported_file_extension(tmp_path):
+    """Unsupported file types should fail gracefully."""
+    unsupported_file = tmp_path / "tickets.txt"
+    unsupported_file.write_text("some data", encoding="utf-8")
+
+    result = run_cli("--input", str(unsupported_file))
+    output = result.stdout + result.stderr
+
+    assert result.returncode == 1
+    assert "Unsupported file type" in output
+
+
 def test_invalid_ticket_data(tmp_path):
     """Invalid ticket priority should trigger validation handling."""
     invalid_csv = tmp_path / "invalid_tickets.csv"
@@ -61,9 +73,7 @@ def test_invalid_ticket_data(tmp_path):
         "created_at",
     ]
 
-    with invalid_csv.open(
-        "w", newline="", encoding="utf-8"
-    ) as file:
+    with invalid_csv.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerow(

@@ -1,4 +1,3 @@
-
 import logging
 
 from app.utils.logging import get_logger
@@ -9,8 +8,6 @@ def test_logger_name():
     logger = get_logger("test_logger")
 
     assert logger.name == "test_logger"
-
-    print("Logger name test passed!")
 
 
 def test_logger_level():
@@ -24,15 +21,11 @@ def test_logger_level():
 
     assert logger.level == expected_level
 
-    print("Logger level test passed!")
-
 
 def test_logger_has_handler():
     logger = get_logger("test_handler_logger")
 
     assert len(logger.handlers) >= 1
-
-    print("Logger handler test passed!")
 
 
 def test_logger_does_not_add_duplicate_handlers():
@@ -42,8 +35,6 @@ def test_logger_does_not_add_duplicate_handlers():
     get_logger("duplicate_test_logger")
 
     assert len(logger.handlers) == initial_handler_count
-
-    print("Duplicate handler test passed!")
 
 
 def test_logger_output(capsys):
@@ -58,14 +49,3 @@ def test_logger_output(capsys):
     assert "INFO" in output
     assert "output_test_logger" in output
     assert "Ticket processing started" in output
-
-    print("Logger output test passed!")
-
-
-if __name__ == "__main__":
-    test_logger_name()
-    test_logger_level()
-    test_logger_has_handler()
-    test_logger_does_not_add_duplicate_handlers()
-
-    print("\nBasic logging tests passed!")

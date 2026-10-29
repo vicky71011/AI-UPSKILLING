@@ -1,12 +1,13 @@
-
 from pathlib import Path
+
+import pytest
+from pydantic import ValidationError
 
 from app.exceptions.ticket_exceptions import TicketProcessingError
 from app.models.ticket_models import TicketOutput
 from app.services.ticket_service import TicketService
 
-
-DATA_DIR = Path("data")
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 def sample_ticket() -> dict:
@@ -31,11 +32,7 @@ def test_process_ticket():
     assert result.priority == "P1"
     assert result.is_critical is True
     assert result.category == "DATABASE"
-    assert result.description_length == len(
-        "Database connection timeout"
-    )
-
-    print("Single ticket processing test passed!")
+    assert result.description_length == len("Database connection timeout")
 
 
 def test_process_file_json():
@@ -46,10 +43,7 @@ def test_process_file_json():
     assert isinstance(results, list)
     assert len(results) == 2
     assert all(isinstance(item, TicketOutput) for item in results)
-    assert results[0].ticket_id == "INC001"
-    assert results[1].ticket_id == "INC002"
-
-    print("JSON file processing test passed!")
+    assert [item.ticket_id for item in results] == ["INC001", "INC002"]
 
 
 def test_process_file_csv():
@@ -60,10 +54,7 @@ def test_process_file_csv():
     assert isinstance(results, list)
     assert len(results) == 2
     assert all(isinstance(item, TicketOutput) for item in results)
-    assert results[0].ticket_id == "INC001"
-    assert results[1].ticket_id == "INC002"
-
-    print("CSV file processing test passed!")
+    assert [item.ticket_id for item in results] == ["INC001", "INC002"]
 
 
 def test_invalid_ticket_data():
@@ -72,28 +63,51 @@ def test_invalid_ticket_data():
     invalid_data = sample_ticket()
     invalid_data["priority"] = "P5"
 
-    try:
+    with pytest.raises(ValidationError):
         service.process_ticket(invalid_data)
-        assert False, "Expected a validation error for priority P5"
-    except ValueError as error:
-        print(f"Invalid ticket validation test passed: {error}")
 
 
 def test_process_file_missing_file():
     service = TicketService()
 
-    try:
-        service.process_file(DATA_DIR / "missing_tickets.json")
-        assert False, "Expected TicketProcessingError for missing file"
-    except TicketProcessingError as error:
-        print(f"Missing file test passed: {error}")
+    missing_file = DATA_DIR / "missing_tickets.json"
+
+    with pytest.raises(TicketProcessingError, match="File doesn't exist"):
+        service.process_file(missing_file)
 
 
-if __name__ == "__main__":
-    test_process_ticket()
-    test_process_file_json()
-    test_process_file_csv()
-    test_invalid_ticket_data()
-    test_process_file_missing_file()
+def test_process_ticket_normalizes_input():
+    service = TicketService()
 
-    print("\nAll TicketService tests passed!")
+    data = sample_ticket()
+    data["ticket_id"] = " INC102 "
+    data["priority"] = " p2 "
+    data["status"] = " open "
+
+    result = service.process_ticket(data)
+
+    assert result.ticket_id == "INC102"
+    assert result.priority == "P2"
+    assert result.status == "OPEN"
+
+
+def test_process_ticket_invalid_description():
+    service = TicketService()
+
+    data = sample_ticket()
+    data["description"] = "   "
+
+    with pytest.raises(ValidationError):
+        service.process_ticket(data)
+
+
+def test_process_file_unsupported_extension(tmp_path):
+    service = TicketService()
+    unsupported_file = tmp_path / "tickets.txt"
+    unsupported_file.write_text("some data", encoding="utf-8")
+
+    with pytest.raises(
+        TicketProcessingError,
+        match="Unsupported file type",
+    ):
+        service.process_file(unsupported_file)

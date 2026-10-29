@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import pytest
+
 from app.domain.ticket import Ticket
 from app.exceptions.ticket_exceptions import TicketProcessingError
 from app.processors.ticket_processor import TicketProcessor
@@ -22,7 +24,6 @@ def create_ticket(
 
 def test_critical_ticket():
     processor = TicketProcessor()
-
     ticket = create_ticket(
         description="Database connection timeout",
         priority="P1",
@@ -30,119 +31,82 @@ def test_critical_ticket():
 
     result = processor.process(ticket)
 
-    print("\n--- Critical Ticket ---")
-    print(result)
-
     assert result.is_critical is True
 
 
-def test_database_category():
+def test_non_critical_ticket():
     processor = TicketProcessor()
-
     ticket = create_ticket(
-        description="Database connection timeout"
+        description="Database connection timeout",
+        priority="P2",
     )
 
     result = processor.process(ticket)
 
-    print("\n--- Database Category ---")
-    print("Category:", result.category)
+    assert result.is_critical is False
+
+
+def test_database_category():
+    processor = TicketProcessor()
+    ticket = create_ticket("Database connection timeout")
+
+    result = processor.process(ticket)
 
     assert result.category == "DATABASE"
 
 
 def test_network_category():
     processor = TicketProcessor()
-
-    ticket = create_ticket(
-        description="Network connection timeout"
-    )
+    ticket = create_ticket("Network connection timeout")
 
     result = processor.process(ticket)
-
-    print("\n--- Network Category ---")
-    print("Category:", result.category)
 
     assert result.category == "NETWORK"
 
 
 def test_server_category():
     processor = TicketProcessor()
-
-    ticket = create_ticket(
-        description="Server CPU usage is very high"
-    )
+    ticket = create_ticket("Server CPU usage is very high")
 
     result = processor.process(ticket)
-
-    print("\n--- Server Category ---")
-    print("Category:", result.category)
 
     assert result.category == "SERVER"
 
 
 def test_access_category():
     processor = TicketProcessor()
-
-    ticket = create_ticket(
-        description="User login password authentication failed"
-    )
+    ticket = create_ticket("User login password authentication failed")
 
     result = processor.process(ticket)
-
-    print("\n--- Access Category ---")
-    print("Category:", result.category)
 
     assert result.category == "ACCESS"
 
 
 def test_general_category():
     processor = TicketProcessor()
-
-    ticket = create_ticket(
-        description="Printer is not working"
-    )
+    ticket = create_ticket("Printer is not working")
 
     result = processor.process(ticket)
-
-    print("\n--- General Category ---")
-    print("Category:", result.category)
 
     assert result.category == "GENERAL"
 
 
 def test_description_length():
     processor = TicketProcessor()
-
     description = "Database timeout"
-
-    ticket = create_ticket(
-        description=description
-    )
+    ticket = create_ticket(description)
 
     result = processor.process(ticket)
-
-    print("\n--- Description Length ---")
-    print("Expected:", len(description))
-    print("Actual:", result.description_length)
 
     assert result.description_length == len(description)
 
 
 def test_output_preserves_description():
     processor = TicketProcessor()
-
     description = "Database Connection Timeout"
-
-    ticket = create_ticket(
-        description=description
-    )
+    ticket = create_ticket(description)
 
     result = processor.process(ticket)
-
-    print("\n--- Description Preservation ---")
-    print("Input:", description)
-    print("Output:", result.description)
 
     assert result.description == description
 
@@ -150,26 +114,29 @@ def test_output_preserves_description():
 def test_invalid_ticket_type():
     processor = TicketProcessor()
 
-    try:
+    with pytest.raises(
+        TicketProcessingError,
+        match="ticket must be an instance of Ticket",
+    ):
         processor.process("not a ticket")
-    except TicketProcessingError as e:
-        print("\n--- Invalid Ticket ---")
-        print("Caught:", e)
-    else:
-        raise AssertionError(
-            "TicketProcessingError was not raised"
-        )
 
 
-if __name__ == "__main__":
-    test_critical_ticket()
-    test_database_category()
-    test_network_category()
-    test_server_category()
-    test_access_category()
-    test_general_category()
-    test_description_length()
-    test_output_preserves_description()
-    test_invalid_ticket_type()
+def test_database_keyword_uses_whole_word_matching():
+    processor = TicketProcessor()
 
-    print("\nAll processor tests passed!")
+    assert processor.categorize("DB query failed") == "DATABASE"
+    assert processor.categorize("SQL execution failed") == "DATABASE"
+    assert processor.categorize("Debugging the application") == "GENERAL"
+
+
+def test_category_precedence():
+    processor = TicketProcessor()
+
+    assert processor.categorize("Database server timeout") == "DATABASE"
+
+
+def test_category_matching_is_case_insensitive():
+    processor = TicketProcessor()
+
+    assert processor.categorize("NETWORK CONNECTION FAILED") == "NETWORK"
+    assert processor.categorize("database query failed") == "DATABASE"

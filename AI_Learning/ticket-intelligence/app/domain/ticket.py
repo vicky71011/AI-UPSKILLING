@@ -1,18 +1,20 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+
 @dataclass
 class Ticket:
-
-    ticket_id : str
-    description : str
-    priority : str
+    ticket_id: str
+    description: str
+    priority: str
     status: str
-    service : str
-    created_by : str
-    created_at : datetime
+    service: str
+    created_by: str
+    created_at: datetime
 
     def __post_init__(self):
+        self._validate_string_fields()
+
         self.ticket_id = self.ticket_id.strip()
         self.description = self.description.strip()
         self.priority = self.normalized_priority()
@@ -22,21 +24,37 @@ class Ticket:
 
         self._validate()
 
+    def _validate_string_fields(self) -> None:
+        """Ensure string operations are safe for all text fields."""
+        fields = (
+            "ticket_id",
+            "description",
+            "priority",
+            "status",
+            "service",
+            "created_by",
+        )
+
+        for field_name in fields:
+            value = getattr(self, field_name)
+
+            if not isinstance(value, str):
+                raise TypeError(f"{field_name} must be a string")
+
     def _validate(self) -> None:
         if not self.ticket_id:
-            raise ValueError("Ticket cannot be empty!")
+            raise ValueError("ticket_id cannot be empty!")
 
         if not self.description:
             raise ValueError("description cannot be empty")
-        
+
         if self.priority not in {"P1", "P2", "P3", "P4"}:
             raise ValueError(
-                f"Invalid priority: {self.priority}. "
-                "Expected one of P1, P2, P3, P4."
+                f"Invalid priority: {self.priority}. Expected one of P1, P2, P3, P4."
             )
 
         if self.status not in {
-            "OPEN", 
+            "OPEN",
             "IN_PROGRESS",
             "RESOLVED",
             "CLOSED",

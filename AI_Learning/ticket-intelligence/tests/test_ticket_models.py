@@ -1,3 +1,4 @@
+import pytest
 from pydantic import ValidationError
 
 from app.models.ticket_models import TicketInput
@@ -14,12 +15,13 @@ def test_valid_ticket():
         created_at="2026-10-05T10:00:00",
     )
 
-    print("\n--- Valid Ticket ---")
-    print(ticket)
-    print("ticket_id:", ticket.ticket_id)
-    print("priority:", ticket.priority)
-    print("status:", ticket.status)
-    print("created_at:", ticket.created_at)
+    assert ticket.ticket_id == "INC001"
+    assert ticket.description == "Database connection timeout"
+    assert ticket.priority == "P1"
+    assert ticket.status == "IN_PROGRESS"
+    assert ticket.service == "Database"
+    assert ticket.created_by == "siva"
+    assert ticket.created_at.year == 2026
 
 
 def test_default_values():
@@ -31,13 +33,12 @@ def test_default_values():
         created_by="admin",
     )
 
-    print("\n--- Default Values ---")
-    print("status:", ticket.status)
-    print("created_at:", ticket.created_at)
+    assert ticket.status == "OPEN"
+    assert ticket.created_at is not None
 
 
 def test_invalid_ticket_id():
-    try:
+    with pytest.raises(ValidationError):
         TicketInput(
             ticket_id="   ",
             description="Database timeout",
@@ -45,13 +46,10 @@ def test_invalid_ticket_id():
             service="Database",
             created_by="siva",
         )
-    except ValidationError as e:
-        print("\n--- Invalid Ticket ID ---")
-        print(e)
 
 
 def test_invalid_priority():
-    try:
+    with pytest.raises(ValidationError):
         TicketInput(
             ticket_id="INC003",
             description="Database timeout",
@@ -59,13 +57,10 @@ def test_invalid_priority():
             service="Database",
             created_by="siva",
         )
-    except ValidationError as e:
-        print("\n--- Invalid Priority ---")
-        print(e)
 
 
 def test_invalid_status():
-    try:
+    with pytest.raises(ValidationError):
         TicketInput(
             ticket_id="INC004",
             description="Database timeout",
@@ -74,13 +69,10 @@ def test_invalid_status():
             service="Database",
             created_by="siva",
         )
-    except ValidationError as e:
-        print("\n--- Invalid Status ---")
-        print(e)
 
 
 def test_invalid_datetime():
-    try:
+    with pytest.raises(ValidationError):
         TicketInput(
             ticket_id="INC005",
             description="Database timeout",
@@ -89,15 +81,3 @@ def test_invalid_datetime():
             created_by="siva",
             created_at="not-a-date",
         )
-    except ValidationError as e:
-        print("\n--- Invalid Datetime ---")
-        print(e)
-
-
-if __name__ == "__main__":
-    test_valid_ticket()
-    test_default_values()
-    test_invalid_ticket_id()
-    test_invalid_priority()
-    test_invalid_status()
-    test_invalid_datetime()

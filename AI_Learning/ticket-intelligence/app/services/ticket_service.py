@@ -1,34 +1,33 @@
 from pathlib import Path
 
+from app.domain.ticket import Ticket
+from app.models.ticket_models import TicketInput, TicketOutput
 from app.processors.ticket_processor import TicketProcessor
 from app.utils.file_loader import FileLoader
-from app.models.ticket_models import TicketInput, TicketOutput
-from app.domain.ticket import Ticket
+
 
 class TicketService:
-
     def __init__(self):
         self.file_loader = FileLoader()
         self.ticket_processor = TicketProcessor()
 
     def process_ticket(self, data: dict) -> TicketOutput:
         ticket_input = TicketInput(**data)
-        validated_input = ticket_input.model_dump()
+        validated_data = ticket_input.model_dump()
 
-        ticket = Ticket(**validated_input)
+        ticket = Ticket(**validated_data)
 
-        result = self.ticket_processor.process(ticket)        
+        result = self.ticket_processor.process(ticket)
 
         return result
 
-
     def process_file(self, path: str | Path) -> list[TicketOutput]:
-        tikcets = self.file_loader.load(path)
+        tickets = self.file_loader.load(path)
 
         results = []
 
-        for data in tikcets:
+        for data in tickets:
             ticket = self.process_ticket(data)
             results.append(ticket)
-        
+
         return results
